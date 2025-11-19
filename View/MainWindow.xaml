@@ -5,8 +5,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:View"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        Title="MainWindow" Height="450" Width="500">
+    <Grid Margin="10,0,10,10">
+        <GroupBox Header="Edit Contact" Margin="15,10,240,60"/>
+        <GroupBox Header="Read Contact" Margin="245,11,10,60"/>
+        <Button Content="Save" Margin="304,369,0,0" Height="25" VerticalAlignment="Top" HorizontalAlignment="Left" Width="80"/>
+        <Button Content="Load" Margin="392,369,0,0" Width="76" Height="25" VerticalAlignment="Top" HorizontalAlignment="Left"/>
 
     </Grid>
 </Window>
