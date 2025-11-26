@@ -17,6 +17,9 @@
             <ColumnDefinition Width="282*"/>
         </Grid.ColumnDefinitions>
 
+        <Border Grid.Column="0" Background="#f8f8f8"/>
+        <Border Grid.Column="1" Background="#f8f8f8"/>
+
         <!-- ПРАВАЯ ПАНЕЛЬ — Read Contact -->
 
         <StackPanel Margin="0,10,0,0" VerticalAlignment="Top" Grid.Column="3">
