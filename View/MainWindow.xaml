@@ -41,15 +41,31 @@
 
             <!-- Список контактов -->
             <ListBox Grid.Row="1"
+                     Name="Name_ListBox"
                      ItemsSource="{Binding Contacts}"
                      SelectedItem="{Binding SelectedContact}"
-                     Margin="15,46,15,40"/>
+                     Margin="15,46,15,40" 
+                     SelectionChanged="Name_ListBox_SelectionChanged"
+                     DisplayMemberPath="Name"/>
 
             <!-- Кнопки -->
             <StackPanel Grid.Row="1" Orientation="Horizontal" Height="25" VerticalAlignment="Bottom" Margin="15,0,15,10">
-                <Button Content="Add" Width="75" Margin="0,0,5,0"/>
-                <Button Content="Edit" Width="75" Margin="0,0,5,0"/>
-                <Button Content="Remove" Width="75"/>
+                <Button Content="Add" 
+                        Name="Add_Button"
+                        Width="75" 
+                        Margin="0,0,5,0" 
+                        Click="Add_Button_Click"/>
+                <Button Content="Edit" 
+                        IsEnabled ="False"
+                        Name="Edit_Button"
+                        Width="75" 
+                        Margin="0,0,5,0" 
+                        Click="Edit_Button_Click"/>
+                <Button Content="Remove" 
+                        IsEnabled ="False"
+                        Name="Remove_Button"
+                        Width="75" 
+                        Click="Remove_Button_Click"/>
             </StackPanel>
         </Grid>
 
@@ -78,26 +94,30 @@
 
                 <Label Content="Name:"/>
                 <TextBox Text="{Binding SelectedContact.Name}"
+                         Name="Name_TextBox"
                          IsReadOnly="True"/>
 
                 <Label Content="Phone Number:"/>
                 <TextBox Text="{Binding SelectedContact.PhoneNumber}"
+                         Name="PhoneNumber_TextBox"
                          IsReadOnly="True"/>
 
                 <Label Content="Email:"/>
                 <TextBox Text="{Binding SelectedContact.Email}"
+                         Name="Email_TextBox"
                          IsReadOnly="True"/>
             </StackPanel>
 
             <!-- Apply (скрыт по умолчанию) -->
             <Button Content="Apply"
-                    Grid.Row="2"
+                    Name="Apply_Button"
+                    Grid.Row="1"
                     Width="75" Height="25"
                     HorizontalAlignment="Left"
-                    Visibility="Collapsed"
+                    Visibility="Hidden"
                     Command="{Binding ApplyCommand}"
-                    Margin="0,10,0,0"/>
-            <Button Content="Apply" Margin="159,0,0,209" Grid.RowSpan="2" Height="25" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="75"/>
+                    Click="Apply_Button_Click"
+                    Margin="159,0,0,209" VerticalAlignment="Bottom"/>
         </Grid>
     </Grid>
 </Window>
