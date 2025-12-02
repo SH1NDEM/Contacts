@@ -28,7 +28,6 @@ namespace View
         private Contact contactBeingEdited;
         private bool isAddingNew = false;
 
-
         private void TextBoxClear()
         {
             Name_TextBox.Clear();
@@ -49,7 +48,6 @@ namespace View
             Edit_Button.IsEnabled = enabled && Name_ListBox.SelectedItem != null;
             Remove_Button.IsEnabled = enabled && Name_ListBox.SelectedItem != null;
         }
-
 
         private void Add_Button_Click(object sender, RoutedEventArgs e)
         {

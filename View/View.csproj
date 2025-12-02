@@ -10,7 +10,7 @@
 
   <ItemGroup>
     <None Remove="free-icon-contact-7980574.png" />
-    <None Remove="free-icon-person-14102739.png" />
+    <None Remove="free_person.png" />
     <None Remove="photo_2025-08-08_01-45-12.jpg" />
   </ItemGroup>
 
@@ -19,9 +19,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="free-icon-contact-7980574.png" />
-    <Resource Include="free-icon-person-14102739.png" />
-    <Resource Include="photo_2025-08-08_01-45-12.jpg" />
+    <Resource Include="Resources\free-icon-contact-7980574.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\free_person.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\photo_2025-08-08_01-45-12.jpg">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
 
 </Project>
