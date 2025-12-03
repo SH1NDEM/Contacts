@@ -1,7 +1,9 @@
-﻿using System.ComponentModel;
+﻿using Model.Services;
+using System.ComponentModel;
+using System.Windows;
+using System.Windows.Input;
 using View.Model;
-using Model.Services;
-//using View.Commands;
+using ViewModel.Commands;
 
 namespace ViewModel
 {
@@ -10,10 +12,14 @@ namespace ViewModel
         private string _name;
         private string _phoneNumber;
         private string _email;
+        private Contact _selectedContact;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
         public Contact Contact { get; set; }
+        public bool IsEditing { get; set; }
+        public bool IsAddingNew { get; set; }
+        public ICommand AddCommand { get; }
 
         public string Name
         {
@@ -48,20 +54,43 @@ namespace ViewModel
             }
         }
 
+        public Contact SelectedContact
+        {
+            get => _selectedContact;
+            set
+            {
+                _selectedContact = value;
+                if (!IsEditing && !IsAddingNew)
+                {
+                    if (value != null)
+                    {
+                        Name = value.Name;
+                        PhoneNumber = value.PhoneNumber;
+                        Email = value.Email;
+                    }
+                }
+
+                OnPropertyChanged(nameof(SelectedContact));
+            }
+        }
+
         public SaveCommand SaveCommand { get; }
         public LoadCommand LoadCommand { get; }
-        public RelayCommand AddContact { get; }
-        public RelayCommand RemoveContact { get; }
-        public RelayCommand EditContact { get; }
-        public RelayCommand ListBoxSelectionChanged { get; }
+        public AddContact AddContact { get; }
+        //public AddContact RemoveContact { get; }
+        //public AddContact EditContact { get; }
+        //public AddContact ListBoxSelectionChanged { get; }
+
 
         public MainVM()
         {
             Contact = new Contact();
 
+
             var serializer = new ContactSerializer();
             SaveCommand = new SaveCommand(this, serializer);
             LoadCommand = new LoadCommand(this, serializer);
+            AddContact = new AddContact(ExecuteAddContact);
         }
 
         private void OnPropertyChanged(string propertyName) =>
@@ -74,6 +103,21 @@ namespace ViewModel
             Name = Contact.Name;
             PhoneNumber = Contact.PhoneNumber;
             Email = Contact.Email;
+        }
+
+        private void ExecuteAddContact(object obj)
+        {
+            SelectedContact = null;
+
+            Name = "";
+            PhoneNumber = "";
+            Email = "";
+
+            IsEditing = true;
+            IsAddingNew = true;
+
+            OnPropertyChanged(nameof(IsEditing));
+            OnPropertyChanged(nameof(IsAddingNew));
         }
     }
 }

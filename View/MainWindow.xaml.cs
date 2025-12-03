@@ -51,6 +51,16 @@ namespace View
         //    Remove_Button.IsEnabled = enabled && Name_ListBox.SelectedItem != null;
         //}
 
+        //private void Add_Button_Click(object sender, RoutedEventArgs e)
+        //{
+        //    Name_ListBox.SelectedItem = null;
+        //    Apply_Button.Visibility = Visibility.Visible;
+        //    TextBoxIsReadOnly(false);
+        //    TextBoxClear();
+        //    isAddingNew = true;
+        //    contactBeingEdited = null;
+        //    SetMainButtonsEnabled(false);
+        //}
 
         //private void Apply_Button_Click(object sender, RoutedEventArgs e)
         //{
