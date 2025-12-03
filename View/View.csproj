@@ -9,7 +9,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="free-icon-contact-7980574.png" />
+    <None Remove="ContactIcon.jpg" />
+    <None Remove="Peson.jpg" />
   </ItemGroup>
 
   <ItemGroup>
@@ -17,7 +18,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="free-icon-contact-7980574.png" />
+    <Resource Include="ContactIcon.jpg" />
+    <Resource Include="Peson.jpg" />
   </ItemGroup>
 
 </Project>

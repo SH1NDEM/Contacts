@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Contacts" Height="450" Width="800"
-        ResizeMode="NoResize" Icon="/free-icon-contact-7980574.png">
+        ResizeMode="NoResize" Icon="/ContactIcon.jpg">
 
     <Grid Margin="15">
 
@@ -51,6 +51,7 @@
             <!-- Кнопки -->
             <StackPanel Grid.Row="1" Orientation="Horizontal" Height="25" VerticalAlignment="Bottom" Margin="15,0,15,10">
                 <Button Content="Add" 
+                        Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibility}, ConverterParameter=Invert}"
                         Name="Add_Button"
                         Width="75" 
                         Margin="0,0,5,0" 
@@ -84,7 +85,13 @@
             </Grid.RowDefinitions>
 
             <!-- Фото -->
-            <Image Source="/free-icon-person-14102739.png" Margin="5,10,0,0" Grid.RowSpan="2" Height="151" VerticalAlignment="Top" HorizontalAlignment="Left" Width="149"/>
+            <Image 
+                Source="/Peson.jpg" 
+                Margin="25,40,0,0" 
+                Grid.RowSpan="2" 
+                Height="100" 
+                VerticalAlignment="Top" 
+                HorizontalAlignment="Left" Width="100"/>
 
             <!-- Поля контакта -->
             <StackPanel Margin="159,10,0,0" 
@@ -110,14 +117,15 @@
 
             <!-- Apply (скрыт по умолчанию) -->
             <Button Content="Apply"
+                    Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibility}}"
                     Name="Apply_Button"
                     Grid.Row="1"
                     Width="75" Height="25"
                     HorizontalAlignment="Left"
-                    Visibility="Hidden"
                     Command="{Binding ApplyCommand}"
                     Click="Apply_Button_Click"
                     Margin="159,0,0,209" VerticalAlignment="Bottom"/>
         </Grid>
+        <StackPanel Grid.Column="2"/>
     </Grid>
 </Window>
