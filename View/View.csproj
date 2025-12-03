@@ -9,7 +9,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="ContactIcon.jpg" />
+    <None Remove="Peson.jpg" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="ContactIcon.jpg" />
+    <Resource Include="Peson.jpg" />
   </ItemGroup>
 
 </Project>
