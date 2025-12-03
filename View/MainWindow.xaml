@@ -45,28 +45,27 @@
                      ItemsSource="{Binding Contacts}"
                      SelectedItem="{Binding SelectedContact}"
                      Margin="15,46,15,40" 
-                     SelectionChanged="Name_ListBox_SelectionChanged"
                      DisplayMemberPath="Name"/>
 
             <!-- Кнопки -->
             <StackPanel Grid.Row="1" Orientation="Horizontal" Height="25" VerticalAlignment="Bottom" Margin="15,0,15,10">
                 <Button Content="Add" 
-                        Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibility}, ConverterParameter=Invert}"
+                        Visibility="Visible"
                         Name="Add_Button"
                         Width="75" 
                         Margin="0,0,5,0" 
-                        Click="Add_Button_Click"/>
+                        Command="{Binding AddCommand}"/>
                 <Button Content="Edit" 
                         IsEnabled ="False"
                         Name="Edit_Button"
                         Width="75" 
                         Margin="0,0,5,0" 
-                        Click="Edit_Button_Click"/>
+                        Command="{Binding AddCommand}"/>
                 <Button Content="Remove" 
                         IsEnabled ="False"
                         Name="Remove_Button"
                         Width="75" 
-                        Click="Remove_Button_Click"/>
+                        Command="{Binding AddCommand}"/>
             </StackPanel>
         </Grid>
 
@@ -86,12 +85,11 @@
 
             <!-- Фото -->
             <Image 
-                Source="/Peson.jpg" 
                 Margin="25,40,0,0" 
                 Grid.RowSpan="2" 
                 Height="100" 
                 VerticalAlignment="Top" 
-                HorizontalAlignment="Left" Width="100"/>
+                HorizontalAlignment="Left" Width="100" Source="/Peson.jpg"/>
 
             <!-- Поля контакта -->
             <StackPanel Margin="159,10,0,0" 
@@ -117,13 +115,12 @@
 
             <!-- Apply (скрыт по умолчанию) -->
             <Button Content="Apply"
-                    Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibility}}"
+                    Visibility="Visible"
                     Name="Apply_Button"
                     Grid.Row="1"
                     Width="75" Height="25"
                     HorizontalAlignment="Left"
                     Command="{Binding ApplyCommand}"
-                    Click="Apply_Button_Click"
                     Margin="159,0,0,209" VerticalAlignment="Bottom"/>
         </Grid>
         <StackPanel Grid.Column="2"/>

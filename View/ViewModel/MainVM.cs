@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using View.Model;
 using Model.Services;
+//using View.Commands;
 
 namespace ViewModel
 {
@@ -49,6 +50,10 @@ namespace ViewModel
 
         public SaveCommand SaveCommand { get; }
         public LoadCommand LoadCommand { get; }
+        public RelayCommand AddContact { get; }
+        public RelayCommand RemoveContact { get; }
+        public RelayCommand EditContact { get; }
+        public RelayCommand ListBoxSelectionChanged { get; }
 
         public MainVM()
         {
