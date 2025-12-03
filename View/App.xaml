@@ -7,6 +7,7 @@
 
     <Application.Resources>
         <conv:BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
+        <conv:NotNullToBoolConverter x:Key="BoolToReedConverter"/>
     </Application.Resources>
 
 </Application>

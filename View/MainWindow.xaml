@@ -56,16 +56,14 @@
                         Margin="0,0,5,0" 
                         Command="{Binding AddContact}"/>
                 <Button Content="Edit" 
-                        IsEnabled ="False"
                         Name="Edit_Button"
                         Width="75" 
                         Margin="0,0,5,0" 
-                        Command="{Binding AddCommand}"/>
+                        Command="{Binding EditContact}"/>
                 <Button Content="Remove" 
-                        IsEnabled ="False"
                         Name="Remove_Button"
                         Width="75" 
-                        Command="{Binding AddCommand}"/>
+                        Command="{Binding RemoveContact}"/>
             </StackPanel>
         </Grid>
 
@@ -100,17 +98,17 @@
                 <Label Content="Name:"/>
                 <TextBox Text="{Binding SelectedContact.Name}"
                          Name="Name_TextBox"
-                         IsReadOnly="True"/>
+                         IsReadOnly="{Binding IsEditing, Converter={StaticResource BoolToReedConverter}}"/>
 
                 <Label Content="Phone Number:"/>
                 <TextBox Text="{Binding SelectedContact.PhoneNumber}"
                          Name="PhoneNumber_TextBox"
-                         IsReadOnly="True"/>
+                         IsReadOnly="{Binding IsEditing, Converter={StaticResource BoolToReedConverter}}"/>
 
                 <Label Content="Email:"/>
                 <TextBox Text="{Binding SelectedContact.Email}"
                          Name="Email_TextBox"
-                         IsReadOnly="True"/>
+                         IsReadOnly="{Binding IsEditing, Converter={StaticResource BoolToReedConverter}}"/>
             </StackPanel>
 
             <!-- Apply (скрыт по умолчанию) -->
@@ -120,7 +118,7 @@
                     Grid.Row="1"
                     Width="75" Height="25"
                     HorizontalAlignment="Left"
-                    Command="{Binding ApplyCommand}"
+                    Command="{Binding ApplyContact}"
                     Margin="159,0,0,209" VerticalAlignment="Bottom"/>
         </Grid>
         <StackPanel Grid.Column="2"/>
