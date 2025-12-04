@@ -1,8 +1,9 @@
-﻿using Model.Services;
+﻿
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows.Input;
 using View.Model;
+using View.Services;
 using ViewModel.Commands;
 
 namespace ViewModel
@@ -15,6 +16,10 @@ namespace ViewModel
         private Contact _selectedContact;
 
         public event PropertyChangedEventHandler PropertyChanged;
+
+        private readonly ContactSerializer _serializer;
+        private const string DataFile = "contacts.json";
+
 
         // Коллекция контактов — для привязки к ListBox/ListView
         public ObservableCollection<Contact> Contacts { get; set; }
@@ -114,7 +119,14 @@ namespace ViewModel
 
         public MainVM()
         {
+            _serializer = new ContactSerializer(DataFile);
+
+            var loaded = _serializer.Load();
+            Contacts = new ObservableCollection<Contact>(loaded);
+
             Contact = new Contact();
+
+            // команды
             AddContact = new RelayCommand(ExecuteAddContact);
             ApplyContact = new RelayCommand(ExecuteApplyContact);
             RemoveContact = new RelayCommand(ExecuteRemoveContact, CanRemoveContact);
@@ -176,6 +188,8 @@ namespace ViewModel
                 IsEditing = false;
                 IsAddingNew = false;
 
+                _serializer.Save(Contacts);
+
                 OnPropertyChanged(nameof(IsEditing));
                 OnPropertyChanged(nameof(IsAddingNew));
             }
@@ -212,20 +226,18 @@ namespace ViewModel
         {
             if (IsAddingNew)
             {
-                // Добавляем новый контакт только если создаём новый
                 if (Contact != null)
                     Contacts.Add(Contact);
 
                 IsAddingNew = false;
             }
 
-            // В любом случае выключаем режим редактирования
             IsEditing = false;
+
+            _serializer.Save(Contacts);
 
             OnPropertyChanged(nameof(IsEditing));
             OnPropertyChanged(nameof(IsAddingNew));
         }
-
-
     }
 }

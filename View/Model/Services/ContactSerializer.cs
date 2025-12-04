@@ -1,43 +1,39 @@
-﻿using Newtonsoft.Json;     
-using System;
+﻿using System.Collections.Generic;
 using System.IO;
+using System.Text.Json;
 using View.Model;
 
-
-namespace Model.Services
+namespace View.Services
 {
     public class ContactSerializer
     {
-        // Путь до файла (по умолчанию)
-        public string FilePath { get; set; }
+        private readonly string _filePath;
 
 
-        public ContactSerializer()
+        public ContactSerializer(string filePath)
         {
-            string docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            FilePath = Path.Combine(docPath, "Contacts", "contacts.json");
+            _filePath = filePath;
         }
 
-        // Сохранение контакта в файл
-        public void Save(Contact contact)
+        public void Save(IEnumerable<Contact> contacts)
         {
-            // Создаём директорию если её нет
-            string directory = Path.GetDirectoryName(FilePath);
-            if (!Directory.Exists(directory))
-                Directory.CreateDirectory(directory);
+            var json = JsonSerializer.Serialize(
+                contacts,
+                new JsonSerializerOptions { WriteIndented = true }
+            );
 
-            string json = JsonConvert.SerializeObject(contact, Formatting.Indented);
-            File.WriteAllText(FilePath, json);
+            File.WriteAllText(_filePath, json);
         }
 
-        // Загрузка контакта из файла
-        public Contact Load()
+        public List<Contact> Load()
         {
-            if (!File.Exists(FilePath))
-                return new Contact(); // если файла нет — возвращаем пустой контакт
+            if (!File.Exists(_filePath))
+                return new List<Contact>();
 
-            string json = File.ReadAllText(FilePath);
-            return JsonConvert.DeserializeObject<Contact>(json);
+            var json = File.ReadAllText(_filePath);
+
+            return JsonSerializer.Deserialize<List<Contact>>(json)
+                   ?? new List<Contact>();
         }
     }
 }
