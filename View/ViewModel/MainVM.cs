@@ -43,8 +43,11 @@ namespace ViewModel
         public RelayCommand AddContact { get; }
         public RelayCommand ApplyContact { get; }
         public RelayCommand RemoveContact { get; }
-        public RelayCommand EditContact { get; }
 
+        /// <summary>
+        /// Команда редактирования контакта.
+        /// </summary>
+        public RelayCommand EditContact { get; }
 
         public string Name
         {
@@ -147,7 +150,6 @@ namespace ViewModel
         private void ExecuteAddContact(object obj)
         {
             SelectedContact = new Contact();
-
 
             Name = "";
             PhoneNumber = "";
