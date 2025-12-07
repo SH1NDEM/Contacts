@@ -24,6 +24,14 @@ namespace ViewModel.Commands
             _execute(parameter);
         }
 
+        /// <summary>
+        /// Ручной вызов обновления CanExecute
+        /// </summary>
+        public void RaiseCanExecuteChanged()
+        {
+            CommandManager.InvalidateRequerySuggested();
+        }
+
         public event EventHandler CanExecuteChanged
         {
             add => CommandManager.RequerySuggested += value;

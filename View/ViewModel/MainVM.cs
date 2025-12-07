@@ -1,15 +1,20 @@
-﻿
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using System.Windows.Input;
 using View.Model;
 using View.Services;
 using ViewModel.Commands;
+using System.Collections;
+using System.Collections.Generic;
+
 
 namespace ViewModel
 {
-    public class MainVM : INotifyPropertyChanged
+    public class MainVM : INotifyPropertyChanged, INotifyDataErrorInfo
     {
+        private readonly Dictionary<string, List<string>> _errors = new();
+
         private string _name;
         private string _phoneNumber;
         private string _email;
@@ -20,12 +25,9 @@ namespace ViewModel
         private readonly ContactSerializer _serializer;
         private const string DataFile = "contacts.json";
 
-
-        // Коллекция контактов — для привязки к ListBox/ListView
         public ObservableCollection<Contact> Contacts { get; set; }
             = new ObservableCollection<Contact>();
 
-        // Текущий контакт, который редактируется
         public Contact Contact { get; set; }
 
         private bool _isEditing;
@@ -40,15 +42,15 @@ namespace ViewModel
         }
 
         public bool IsAddingNew { get; set; }
+
         public RelayCommand AddContact { get; }
         public RelayCommand ApplyContact { get; }
         public RelayCommand RemoveContact { get; }
-
-        /// <summary>
-        /// Команда редактирования контакта.
-        /// </summary>
         public RelayCommand EditContact { get; }
 
+        // ----------------------------
+        // ВАЛИДАЦИЯ СВОЙСТВ
+        // ----------------------------
         public string Name
         {
             get => _name;
@@ -56,7 +58,9 @@ namespace ViewModel
             {
                 _name = value;
                 Contact.Name = value;
+                ValidateName();
                 OnPropertyChanged(nameof(Name));
+                ApplyContact.RaiseCanExecuteChanged();
             }
         }
 
@@ -67,7 +71,9 @@ namespace ViewModel
             {
                 _phoneNumber = value;
                 Contact.PhoneNumber = value;
+                ValidatePhone();
                 OnPropertyChanged(nameof(PhoneNumber));
+                ApplyContact.RaiseCanExecuteChanged();
             }
         }
 
@@ -78,10 +84,15 @@ namespace ViewModel
             {
                 _email = value;
                 Contact.Email = value;
+                ValidateEmail();
                 OnPropertyChanged(nameof(Email));
+                ApplyContact.RaiseCanExecuteChanged();
             }
         }
 
+        // ----------------------------
+        // SelectedContact
+        // ----------------------------
         public Contact SelectedContact
         {
             get => _selectedContact;
@@ -116,10 +127,14 @@ namespace ViewModel
                 OnPropertyChanged(nameof(SelectedContact));
                 OnPropertyChanged(nameof(IsEditing));
                 OnPropertyChanged(nameof(IsAddingNew));
+
+                ApplyContact.RaiseCanExecuteChanged();
             }
         }
 
-
+        // ----------------------------
+        // CONSTRUCTOR
+        // ----------------------------
         public MainVM()
         {
             _serializer = new ContactSerializer(DataFile);
@@ -129,24 +144,131 @@ namespace ViewModel
 
             Contact = new Contact();
 
-            // команды
             AddContact = new RelayCommand(ExecuteAddContact);
-            ApplyContact = new RelayCommand(ExecuteApplyContact);
+            ApplyContact = new RelayCommand(ExecuteApplyContact, CanApplyContact);
             RemoveContact = new RelayCommand(ExecuteRemoveContact, CanRemoveContact);
             EditContact = new RelayCommand(ExecuteEditContact, CanEditContact);
         }
 
-        private void OnPropertyChanged(string propertyName) =>
+        private void OnPropertyChanged(string propertyName)
+        {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
-        // Обновление UI после Load()
-        public void RefreshFromContact()
-        {
-            Name = Contact.Name;
-            PhoneNumber = Contact.PhoneNumber;
-            Email = Contact.Email;
+            // Проверяем доступность Apply при изменении полей
+            if (propertyName == nameof(Name) ||
+                propertyName == nameof(PhoneNumber) ||
+                propertyName == nameof(Email))
+            {
+                ApplyContact?.RaiseCanExecuteChanged();
+            }
         }
 
+        // ==============================
+        // ВАЛИДАЦИЯ
+        // ==============================
+
+        private void AddError(string prop, string msg)
+        {
+            if (!_errors.ContainsKey(prop))
+                _errors[prop] = new List<string>();
+
+            if (!_errors[prop].Contains(msg))
+                _errors[prop].Add(msg);
+
+            ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(prop));
+        }
+
+        private void ClearErrors(string prop)
+        {
+            if (_errors.Remove(prop))
+                ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(prop));
+        }
+
+        public bool HasErrors => _errors.Any();
+        public event EventHandler<DataErrorsChangedEventArgs> ErrorsChanged;
+
+        public IEnumerable GetErrors(string propertyName)
+        {
+            if (propertyName != null && _errors.ContainsKey(propertyName))
+                return _errors[propertyName];
+
+            return Enumerable.Empty<string>();
+        }
+
+        /// <summary>
+        /// Валидация имени.
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        private void ValidateName()
+        {
+            ClearErrors(nameof(Name));
+            if (!string.IsNullOrWhiteSpace(Name))
+            {
+                if (Name.Length > 100)
+                    AddError(nameof(Name), "Name must be ≤ 100 characters");
+            }
+        }
+
+        /// <summary>
+        /// Валидация номера телефона.
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        private void ValidatePhone()
+        {
+            ClearErrors(nameof(PhoneNumber));
+            if (!string.IsNullOrWhiteSpace(PhoneNumber))
+            {
+                if (PhoneNumber.Length > 100)
+                    AddError(nameof(PhoneNumber), "Phone number must be ≤ 100 characters");
+
+                if (!PhoneNumber.All(c => char.IsDigit(c) || "+-() ".Contains(c)))
+                    AddError(nameof(PhoneNumber), "Invalid characters in phone number");
+            }
+        }
+
+        /// <summary>
+        /// Валидация почты.
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        private void ValidateEmail()
+        {
+            ClearErrors(nameof(Email));
+            if (!string.IsNullOrWhiteSpace(Email))
+            {
+                if (Email.Length > 100)
+                    AddError(nameof(Email), "Email must be ≤ 100 characters");
+
+                if (!Email.Contains("@"))
+                    AddError(nameof(Email), "Email must contain '@'");
+            }
+        }
+
+        /// <summary>
+        /// Значение на возможность добавления контакта контанта.
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        private bool CanApplyContact(object obj)
+        {
+            bool anyFieldFilled = !string.IsNullOrWhiteSpace(Name) ||
+                                  !string.IsNullOrWhiteSpace(PhoneNumber) ||
+                                  !string.IsNullOrWhiteSpace(Email);
+
+            return IsEditing && anyFieldFilled && !HasErrors;
+        }
+
+        // ==============================
+        // COMMAND LOGIC
+        // ==============================
+
+        /// <summary>
+        /// Открытие полей на запись и видимости кнопки Apply.
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
         private void ExecuteAddContact(object obj)
         {
             SelectedContact = new Contact();
@@ -158,88 +280,79 @@ namespace ViewModel
             IsEditing = true;
             IsAddingNew = true;
 
-            OnPropertyChanged(nameof(IsEditing));
-            OnPropertyChanged(nameof(IsAddingNew));
+            ApplyContact.RaiseCanExecuteChanged();
         }
 
-        // Метод сохранения контакта в коллекцию
-        public void AddCurrentContactToList(object obj)
-        {
-            if (Contact != null)
-                Contacts.Add(Contact);
+        /// <summary>
+        /// Значение на возможность удаления контанта.
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        private bool CanRemoveContact(object obj) => SelectedContact != null;
 
-            IsEditing = false;
-            IsAddingNew = false;
-        }
-
-        private bool CanRemoveContact(object obj)
-        {
-            return SelectedContact != null;
-        }
-
+        /// <summary>
+        /// Выполнение удаления контакта.
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
         private void ExecuteRemoveContact(object obj)
         {
             if (SelectedContact != null)
             {
                 Contacts.Remove(SelectedContact);
-
-                // После удаления убираем выделение
                 SelectedContact = null;
 
-                // Блокируем режим редактирования
                 IsEditing = false;
                 IsAddingNew = false;
 
                 _serializer.Save(Contacts);
-
-                OnPropertyChanged(nameof(IsEditing));
-                OnPropertyChanged(nameof(IsAddingNew));
+                ApplyContact.RaiseCanExecuteChanged();
             }
         }
 
-        private bool CanEditContact(object obj)
-        {
-            return SelectedContact != null;
-        }
+        /// <summary>
+        /// Значение на возможность изменения контанта.
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        private bool CanEditContact(object obj) => SelectedContact != null;
 
-
+        /// <summary>
+        /// Выполнение команды изменения контакта.
+        /// </summary>
+        /// <param name="obj"></param>
         private void ExecuteEditContact(object obj)
         {
             if (SelectedContact == null)
                 return;
 
-            // Устанавливаем текущий редактируемый объект
             Contact = SelectedContact;
 
-            // Загружаем данные в поля
             Name = Contact.Name;
             PhoneNumber = Contact.PhoneNumber;
             Email = Contact.Email;
 
-            // Входим в режим редактирования
             IsEditing = true;
             IsAddingNew = false;
 
-            OnPropertyChanged(nameof(IsEditing));
-            OnPropertyChanged(nameof(IsAddingNew));
+            ApplyContact.RaiseCanExecuteChanged();
         }
 
+        /// <summary>
+        /// Выполение команды сохраниения контакта.
+        /// </summary>
+        /// <param name="obj"></param>
         private void ExecuteApplyContact(object obj)
         {
-            if (IsAddingNew)
-            {
-                if (Contact != null)
-                    Contacts.Add(Contact);
+            if (IsAddingNew && Contact != null)
+                Contacts.Add(Contact);
 
-                IsAddingNew = false;
-            }
-
+            IsAddingNew = false;
             IsEditing = false;
 
             _serializer.Save(Contacts);
 
-            OnPropertyChanged(nameof(IsEditing));
-            OnPropertyChanged(nameof(IsAddingNew));
+            ApplyContact.RaiseCanExecuteChanged();
         }
     }
 }
