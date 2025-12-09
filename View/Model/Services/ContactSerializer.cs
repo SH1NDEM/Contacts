@@ -9,7 +9,6 @@ namespace View.Services
     {
         private readonly string _filePath;
 
-
         public ContactSerializer(string filePath)
         {
             _filePath = filePath;
