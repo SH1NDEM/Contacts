@@ -25,6 +25,17 @@ namespace ViewModel
         private readonly ContactSerializer _serializer;
         private const string DataFile = "contacts.json";
 
+        private Contact _tempContact;
+        public Contact TempContact
+        {
+            get => _tempContact;
+            set
+            {
+                _tempContact = value;
+                OnPropertyChanged(nameof(TempContact));
+            }
+        }
+
         public ObservableCollection<Contact> Contacts { get; set; }
             = new ObservableCollection<Contact>();
 
@@ -57,7 +68,7 @@ namespace ViewModel
             set
             {
                 _name = value;
-                Contact.Name = value;
+                TempContact.Name = value;
                 ValidateName();
                 OnPropertyChanged(nameof(Name));
                 ApplyContact.RaiseCanExecuteChanged();
@@ -70,7 +81,7 @@ namespace ViewModel
             set
             {
                 _phoneNumber = value;
-                Contact.PhoneNumber = value;
+                TempContact.PhoneNumber = value;
                 ValidatePhone();
                 OnPropertyChanged(nameof(PhoneNumber));
                 ApplyContact.RaiseCanExecuteChanged();
@@ -83,7 +94,7 @@ namespace ViewModel
             set
             {
                 _email = value;
-                Contact.Email = value;
+                TempContact.Email = value;
                 ValidateEmail();
                 OnPropertyChanged(nameof(Email));
                 ApplyContact.RaiseCanExecuteChanged();
@@ -127,7 +138,6 @@ namespace ViewModel
                 OnPropertyChanged(nameof(SelectedContact));
                 OnPropertyChanged(nameof(IsEditing));
                 OnPropertyChanged(nameof(IsAddingNew));
-
                 ApplyContact.RaiseCanExecuteChanged();
             }
         }
@@ -141,7 +151,7 @@ namespace ViewModel
 
             var loaded = _serializer.Load();
             Contacts = new ObservableCollection<Contact>(loaded);
-
+            TempContact = new Contact();
             Contact = new Contact();
 
             AddContact = new RelayCommand(ExecuteAddContact);
@@ -326,15 +336,15 @@ namespace ViewModel
             if (SelectedContact == null)
                 return;
 
-            Contact = SelectedContact;
-
-            Name = Contact.Name;
-            PhoneNumber = Contact.PhoneNumber;
-            Email = Contact.Email;
+            TempContact = new Contact
+            {
+                Name = SelectedContact.Name,
+                PhoneNumber = SelectedContact.PhoneNumber,
+                Email = SelectedContact.Email
+            };
 
             IsEditing = true;
             IsAddingNew = false;
-
             ApplyContact.RaiseCanExecuteChanged();
         }
 
@@ -345,14 +355,36 @@ namespace ViewModel
         private void ExecuteApplyContact(object obj)
         {
             if (IsAddingNew && Contact != null)
-                Contacts.Add(Contact);
+            {
+                Contacts.Add(TempContact);
+            }
+            else
+            {
+                if (SelectedContact != null)
+                {
+                    SelectedContact.Name = Name;
+                    SelectedContact.PhoneNumber = PhoneNumber;
+                    SelectedContact.Email = Email;
+                    _serializer.Save(Contacts);
+                }
+                var index = Contacts.IndexOf(SelectedContact);
+                Contacts[index] = TempContact;
+            }
 
             IsAddingNew = false;
             IsEditing = false;
-
             _serializer.Save(Contacts);
-
             ApplyContact.RaiseCanExecuteChanged();
+            ResetTempContact();
         }
+
+        private void ResetTempContact()
+        {
+            TempContact = new Contact();
+            Name = string.Empty;
+            PhoneNumber = string.Empty;
+            Email = string.Empty;
+        }
+
     }
 }

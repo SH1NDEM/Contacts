@@ -43,21 +43,30 @@
 
             <!-- Список контактов -->
             <ListBox Grid.Row="1"
-         Name="Name_ListBox"
-         ItemsSource="{Binding Contacts}"
-         SelectedItem="{Binding SelectedContact}"
-         Margin="15,46,15,40">
+                 Name="Name_ListBox"
+                 ItemsSource="{Binding Contacts}"
+                 SelectedItem="{Binding SelectedContact}"
+                 Margin="15,46,15,40">
 
                 <ListBox.ItemTemplate>
                     <DataTemplate>
-                        <StackPanel Margin="3">
+                        <StackPanel Orientation="Horizontal" Margin="3">
+                            <Image
+                                Source="/Peson.jpg"
+                                Width="40"
+                                Height="40"
+                                Margin="0 0 8 0"
+                                Stretch="UniformToFill"/>
+                            
+                        <StackPanel>
                             <TextBlock
-                    FontSize="12"
-                    FontWeight="SemiBold"
-                    Text="{Binding Name}"/>
+                                FontSize="12"
+                                FontWeight="SemiBold"
+                                Text="{Binding Name}"/>
                             <TextBlock
-                    FontSize="10"
-                    Text="{Binding PhoneNumber}"/>
+                                FontSize="10"
+                                Text="{Binding PhoneNumber}"/>
+                        </StackPanel>
                         </StackPanel>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
