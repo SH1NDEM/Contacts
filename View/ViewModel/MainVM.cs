@@ -1,181 +1,205 @@
-﻿using System.Collections.ObjectModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
-using System.Windows.Input;
 using View.Model;
 using View.Services;
-using ViewModel.Commands;
-using System.Collections;
-using System.Collections.Generic;
-
 
 namespace ViewModel
 {
-    public class MainVM : INotifyPropertyChanged, INotifyDataErrorInfo
+    public partial class MainVM : ObservableObject, INotifyDataErrorInfo
     {
         private readonly Dictionary<string, List<string>> _errors = new();
 
-        private string _name;
-        private string _phoneNumber;
-        private string _email;
-        private Contact _selectedContact;
+        public ObservableCollection<ContactVM> Contacts { get; } = new();
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        [ObservableProperty]
+        private ContactVM tempContact = new ContactVM();
 
-        private readonly ContactSerializer _serializer;
-        private const string DataFile = "contacts.json";
+        private readonly ContactSerializer _serializer = new("contacts.json");
 
-        private Contact _tempContact;
-        public Contact TempContact
+        [ObservableProperty]
+        private string name;
+
+        partial void OnNameChanged(string value)
         {
-            get => _tempContact;
-            set
-            {
-                _tempContact = value;
-                OnPropertyChanged(nameof(TempContact));
-            }
+            TempContact.Name = value;
+            ValidateName();
+            ApplyContactCommand.NotifyCanExecuteChanged();
         }
 
-        public ObservableCollection<Contact> Contacts { get; set; }
-            = new ObservableCollection<Contact>();
+        [ObservableProperty]
+        private string phoneNumber;
 
-        public Contact Contact { get; set; }
-
-        private bool _isEditing;
-        public bool IsEditing
+        partial void OnPhoneNumberChanged(string value)
         {
-            get => _isEditing;
-            set
-            {
-                _isEditing = value;
-                OnPropertyChanged(nameof(IsEditing));
-            }
+            TempContact.PhoneNumber = value;
+            ValidatePhone();
+            ApplyContactCommand.NotifyCanExecuteChanged();
         }
 
-        public bool IsAddingNew { get; set; }
+        [ObservableProperty]
+        private string email;
 
-        public RelayCommand AddContact { get; }
-        public RelayCommand ApplyContact { get; }
-        public RelayCommand RemoveContact { get; }
-        public RelayCommand EditContact { get; }
-
-        // ----------------------------
-        // ВАЛИДАЦИЯ СВОЙСТВ
-        // ----------------------------
-        public string Name
+        partial void OnEmailChanged(string value)
         {
-            get => _name;
-            set
-            {
-                _name = value;
-                TempContact.Name = value;
-                ValidateName();
-                OnPropertyChanged(nameof(Name));
-                ApplyContact.RaiseCanExecuteChanged();
-            }
+            TempContact.Email = value;
+            ValidateEmail();
+            ApplyContactCommand.NotifyCanExecuteChanged();
         }
 
-        public string PhoneNumber
+        [ObservableProperty]
+        private ContactVM selectedContact;
+
+        partial void OnSelectedContactChanged(ContactVM value)
         {
-            get => _phoneNumber;
-            set
+            if (IsEditing)
             {
-                _phoneNumber = value;
-                TempContact.PhoneNumber = value;
-                ValidatePhone();
-                OnPropertyChanged(nameof(PhoneNumber));
-                ApplyContact.RaiseCanExecuteChanged();
+                IsEditing = false;
+                IsAddingNew = false;
             }
-        }
 
-        public string Email
-        {
-            get => _email;
-            set
+            if (value != null)
             {
-                _email = value;
-                TempContact.Email = value;
-                ValidateEmail();
-                OnPropertyChanged(nameof(Email));
-                ApplyContact.RaiseCanExecuteChanged();
-            }
-        }
-
-        // ----------------------------
-        // SelectedContact
-        // ----------------------------
-        public Contact SelectedContact
-        {
-            get => _selectedContact;
-            set
-            {
-                if (_selectedContact == value)
-                    return;
-
-                if (IsEditing)
+                TempContact = new ContactVM
                 {
-                    IsEditing = false;
-                    IsAddingNew = false;
+                    Name = value.Name,
+                    PhoneNumber = value.PhoneNumber,
+                    Email = value.Email
+                };
 
-                    if (_selectedContact != null)
-                    {
-                        Name = _selectedContact.Name;
-                        PhoneNumber = _selectedContact.PhoneNumber;
-                        Email = _selectedContact.Email;
-                    }
-                }
-
-                _selectedContact = value;
-
-                if (_selectedContact != null)
-                {
-                    Contact = _selectedContact;
-                    Name = _selectedContact.Name;
-                    PhoneNumber = _selectedContact.PhoneNumber;
-                    Email = _selectedContact.Email;
-                }
-
-                OnPropertyChanged(nameof(SelectedContact));
-                OnPropertyChanged(nameof(IsEditing));
-                OnPropertyChanged(nameof(IsAddingNew));
-                ApplyContact.RaiseCanExecuteChanged();
+                Name = value.Name;
+                PhoneNumber = value.PhoneNumber;
+                Email = value.Email;
             }
+
+            RemoveContactCommand.NotifyCanExecuteChanged();
+            EditContactCommand.NotifyCanExecuteChanged();
+            ApplyContactCommand.NotifyCanExecuteChanged();
         }
 
-        // ----------------------------
-        // CONSTRUCTOR
-        // ----------------------------
-        public MainVM()
+        [ObservableProperty]
+        private bool isEditing;
+
+        [ObservableProperty]
+        private bool isAddingNew;
+
+        #region Commands
+        [RelayCommand]
+        private void AddContact()
         {
-            _serializer = new ContactSerializer(DataFile);
+            SelectedContact = null;
+            TempContact = new ContactVM();
 
-            var loaded = _serializer.Load();
-            Contacts = new ObservableCollection<Contact>(loaded);
-            TempContact = new Contact();
-            Contact = new Contact();
+            Name = "";
+            PhoneNumber = "";
+            Email = "";
 
-            AddContact = new RelayCommand(ExecuteAddContact);
-            ApplyContact = new RelayCommand(ExecuteApplyContact, CanApplyContact);
-            RemoveContact = new RelayCommand(ExecuteRemoveContact, CanRemoveContact);
-            EditContact = new RelayCommand(ExecuteEditContact, CanEditContact);
+            IsAddingNew = true;
+            IsEditing = true;
+
+            ApplyContactCommand.NotifyCanExecuteChanged();
         }
 
-        private void OnPropertyChanged(string propertyName)
+        [RelayCommand(CanExecute = nameof(CanRemoveContact))]
+        private void RemoveContact()
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            if (SelectedContact == null) return;
 
-            // Проверяем доступность Apply при изменении полей
-            if (propertyName == nameof(Name) ||
-                propertyName == nameof(PhoneNumber) ||
-                propertyName == nameof(Email))
+            int index = Contacts.IndexOf(SelectedContact);
+            Contacts.Remove(SelectedContact);
+
+            if (Contacts.Count == 0)
+                SelectedContact = null;
+            else if (index >= Contacts.Count)
+                SelectedContact = Contacts.Last();
+            else
+                SelectedContact = Contacts[index];
+
+            _serializer.Save(Contacts.Select(c => new Contact
             {
-                ApplyContact?.RaiseCanExecuteChanged();
-            }
+                Name = c.Name,
+                PhoneNumber = c.PhoneNumber,
+                Email = c.Email
+            }).ToList());
         }
 
-        // ==============================
-        // ВАЛИДАЦИЯ
-        // ==============================
+        private bool CanRemoveContact() => SelectedContact != null;
+
+        [RelayCommand(CanExecute = nameof(CanEditContact))]
+        private void EditContact()
+        {
+            if (SelectedContact == null) return;
+
+            TempContact = new ContactVM
+            {
+                Name = SelectedContact.Name,
+                PhoneNumber = SelectedContact.PhoneNumber,
+                Email = SelectedContact.Email
+            };
+
+            Name = TempContact.Name;
+            PhoneNumber = TempContact.PhoneNumber;
+            Email = TempContact.Email;
+
+            IsEditing = true;
+            IsAddingNew = false;
+
+            ApplyContactCommand.NotifyCanExecuteChanged();
+        }
+
+        private bool CanEditContact() => SelectedContact != null;
+
+        [RelayCommand(CanExecute = nameof(CanApplyContact))]
+        private void ApplyContact()
+        {
+            if (IsAddingNew)
+            {
+                Contacts.Add(new ContactVM
+                {
+                    Name = Name,
+                    PhoneNumber = PhoneNumber,
+                    Email = Email
+                });
+            }
+            else if (SelectedContact != null)
+            {
+                SelectedContact.Name = Name;
+                SelectedContact.PhoneNumber = PhoneNumber;
+                SelectedContact.Email = Email;
+            }
+
+            _serializer.Save(Contacts.Select(c => new Contact
+            {
+                Name = c.Name,
+                PhoneNumber = c.PhoneNumber,
+                Email = c.Email
+            }).ToList());
+
+            IsEditing = false;
+            IsAddingNew = false;
+        }
+
+        private bool CanApplyContact() =>
+            IsEditing &&
+            !HasErrors &&
+            (!string.IsNullOrWhiteSpace(Name) ||
+             !string.IsNullOrWhiteSpace(PhoneNumber) ||
+             !string.IsNullOrWhiteSpace(Email));
+        #endregion
+
+        #region Validation
+        public bool HasErrors => _errors.Any();
+        public event EventHandler<DataErrorsChangedEventArgs> ErrorsChanged;
+
+        public System.Collections.IEnumerable GetErrors(string propertyName)
+        {
+            if (propertyName != null && _errors.ContainsKey(propertyName))
+                return _errors[propertyName];
+
+            return Enumerable.Empty<string>();
+        }
 
         private void AddError(string prop, string msg)
         {
@@ -183,9 +207,10 @@ namespace ViewModel
                 _errors[prop] = new List<string>();
 
             if (!_errors[prop].Contains(msg))
+            {
                 _errors[prop].Add(msg);
-
-            ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(prop));
+                ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(prop));
+            }
         }
 
         private void ClearErrors(string prop)
@@ -194,197 +219,30 @@ namespace ViewModel
                 ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(prop));
         }
 
-        public bool HasErrors => _errors.Any();
-        public event EventHandler<DataErrorsChangedEventArgs> ErrorsChanged;
-
-        public IEnumerable GetErrors(string propertyName)
-        {
-            if (propertyName != null && _errors.ContainsKey(propertyName))
-                return _errors[propertyName];
-
-            return Enumerable.Empty<string>();
-        }
-
-        /// <summary>
-        /// Валидация имени.
-        /// </summary>
-        /// <param name="obj"></param>
-        /// <returns></returns>
         private void ValidateName()
         {
             ClearErrors(nameof(Name));
-            if (!string.IsNullOrWhiteSpace(Name))
-            {
-                if (Name.Length > 100)
-                    AddError(nameof(Name), "Name must be ≤ 100 characters");
-            }
+            if (Name?.Length > 100)
+                AddError(nameof(Name), "Имя ≤ 100 символов.");
         }
 
-        /// <summary>
-        /// Валидация номера телефона.
-        /// </summary>
-        /// <param name="obj"></param>
-        /// <returns></returns>
         private void ValidatePhone()
         {
             ClearErrors(nameof(PhoneNumber));
-            if (!string.IsNullOrWhiteSpace(PhoneNumber))
-            {
-                if (PhoneNumber.Length > 100)
-                    AddError(nameof(PhoneNumber), "Phone number must be ≤ 100 characters");
-
-                if (!PhoneNumber.All(c => char.IsDigit(c) || "+-() ".Contains(c)))
-                    AddError(nameof(PhoneNumber), "Invalid characters in phone number");
-            }
+            if (PhoneNumber?.Length > 100)
+                AddError(nameof(PhoneNumber), "Телефон ≤ 100 символов.");
+            if (PhoneNumber != null && !PhoneNumber.All(c => char.IsDigit(c) || "+-() ".Contains(c)))
+                AddError(nameof(PhoneNumber), "Недопустимые символы.");
         }
 
-        /// <summary>
-        /// Валидация почты.
-        /// </summary>
-        /// <param name="obj"></param>
-        /// <returns></returns>
         private void ValidateEmail()
         {
             ClearErrors(nameof(Email));
-            if (!string.IsNullOrWhiteSpace(Email))
-            {
-                if (Email.Length > 100)
-                    AddError(nameof(Email), "Email must be ≤ 100 characters");
-
-                if (!Email.Contains("@"))
-                    AddError(nameof(Email), "Email must contain '@'");
-            }
+            if (Email?.Length > 100)
+                AddError(nameof(Email), "Email ≤ 100 символов.");
+            if (!string.IsNullOrEmpty(Email) && !Email.Contains("@"))
+                AddError(nameof(Email), "Неверный формат email.");
         }
-
-        /// <summary>
-        /// Значение на возможность добавления контакта контанта.
-        /// </summary>
-        /// <param name="obj"></param>
-        /// <returns></returns>
-        private bool CanApplyContact(object obj)
-        {
-            bool anyFieldFilled = !string.IsNullOrWhiteSpace(Name) ||
-                                  !string.IsNullOrWhiteSpace(PhoneNumber) ||
-                                  !string.IsNullOrWhiteSpace(Email);
-
-            return IsEditing && anyFieldFilled && !HasErrors;
-        }
-
-        // ==============================
-        // COMMAND LOGIC
-        // ==============================
-
-        /// <summary>
-        /// Открытие полей на запись и видимости кнопки Apply.
-        /// </summary>
-        /// <param name="obj"></param>
-        /// <returns></returns>
-        private void ExecuteAddContact(object obj)
-        {
-            SelectedContact = new Contact();
-
-            Name = "";
-            PhoneNumber = "";
-            Email = "";
-
-            IsEditing = true;
-            IsAddingNew = true;
-
-            ApplyContact.RaiseCanExecuteChanged();
-        }
-
-        /// <summary>
-        /// Значение на возможность удаления контанта.
-        /// </summary>
-        /// <param name="obj"></param>
-        /// <returns></returns>
-        private bool CanRemoveContact(object obj) => SelectedContact != null;
-
-        /// <summary>
-        /// Выполнение удаления контакта.
-        /// </summary>
-        /// <param name="obj"></param>
-        /// <returns></returns>
-        private void ExecuteRemoveContact(object obj)
-        {
-            if (SelectedContact != null)
-            {
-                Contacts.Remove(SelectedContact);
-                SelectedContact = null;
-
-                IsEditing = false;
-                IsAddingNew = false;
-
-                _serializer.Save(Contacts);
-                ApplyContact.RaiseCanExecuteChanged();
-            }
-        }
-
-        /// <summary>
-        /// Значение на возможность изменения контанта.
-        /// </summary>
-        /// <param name="obj"></param>
-        /// <returns></returns>
-        private bool CanEditContact(object obj) => SelectedContact != null;
-
-        /// <summary>
-        /// Выполнение команды изменения контакта.
-        /// </summary>
-        /// <param name="obj"></param>
-        private void ExecuteEditContact(object obj)
-        {
-            if (SelectedContact == null)
-                return;
-
-            TempContact = new Contact
-            {
-                Name = SelectedContact.Name,
-                PhoneNumber = SelectedContact.PhoneNumber,
-                Email = SelectedContact.Email
-            };
-
-            IsEditing = true;
-            IsAddingNew = false;
-            ApplyContact.RaiseCanExecuteChanged();
-        }
-
-        /// <summary>
-        /// Выполение команды сохраниения контакта.
-        /// </summary>
-        /// <param name="obj"></param>
-        private void ExecuteApplyContact(object obj)
-        {
-            if (IsAddingNew && Contact != null)
-            {
-                Contacts.Add(TempContact);
-            }
-            else
-            {
-                if (SelectedContact != null)
-                {
-                    SelectedContact.Name = Name;
-                    SelectedContact.PhoneNumber = PhoneNumber;
-                    SelectedContact.Email = Email;
-                    _serializer.Save(Contacts);
-                }
-                var index = Contacts.IndexOf(SelectedContact);
-                Contacts[index] = TempContact;
-            }
-
-            IsAddingNew = false;
-            IsEditing = false;
-            _serializer.Save(Contacts);
-            ApplyContact.RaiseCanExecuteChanged();
-            ResetTempContact();
-        }
-
-        private void ResetTempContact()
-        {
-            TempContact = new Contact();
-            Name = string.Empty;
-            PhoneNumber = string.Empty;
-            Email = string.Empty;
-        }
-
+        #endregion
     }
 }

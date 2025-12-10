@@ -1,13 +1,12 @@
 ﻿<Application x:Class="View.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:View"
              xmlns:conv="clr-namespace:View.Converters"
              StartupUri="MainWindow.xaml">
 
     <Application.Resources>
         <conv:BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
-        <conv:NotNullToBoolConverter x:Key="BoolToReedConverter"/>
+        <conv:NotNullToBoolConverter x:Key="BoolInvert"/>
     </Application.Resources>
 
 </Application>
