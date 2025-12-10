@@ -79,6 +79,7 @@ namespace ViewModel
             ApplyContactCommand.NotifyCanExecuteChanged();
         }
 
+
         [ObservableProperty]
         private bool isEditing;
 
