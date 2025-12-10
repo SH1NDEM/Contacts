@@ -12,12 +12,12 @@ namespace ViewModel
     {
         private readonly Dictionary<string, List<string>> _errors = new();
 
+        private readonly ContactSerializer _serializer = new("contacts.json");
+
         public ObservableCollection<ContactVM> Contacts { get; } = new();
 
         [ObservableProperty]
         private ContactVM tempContact = new ContactVM();
-
-        private readonly ContactSerializer _serializer = new("contacts.json");
 
         [ObservableProperty]
         private string name;
@@ -79,14 +79,19 @@ namespace ViewModel
             ApplyContactCommand.NotifyCanExecuteChanged();
         }
 
-
         [ObservableProperty]
         private bool isEditing;
 
         [ObservableProperty]
         private bool isAddingNew;
 
+        public MainVM()
+        {
+            LoadContacts();
+        }
+
         #region Commands
+
         [RelayCommand]
         private void AddContact()
         {
@@ -118,12 +123,7 @@ namespace ViewModel
             else
                 SelectedContact = Contacts[index];
 
-            _serializer.Save(Contacts.Select(c => new Contact
-            {
-                Name = c.Name,
-                PhoneNumber = c.PhoneNumber,
-                Email = c.Email
-            }).ToList());
+            SaveContacts();
         }
 
         private bool CanRemoveContact() => SelectedContact != null;
@@ -171,12 +171,7 @@ namespace ViewModel
                 SelectedContact.Email = Email;
             }
 
-            _serializer.Save(Contacts.Select(c => new Contact
-            {
-                Name = c.Name,
-                PhoneNumber = c.PhoneNumber,
-                Email = c.Email
-            }).ToList());
+            SaveContacts();
 
             IsEditing = false;
             IsAddingNew = false;
@@ -188,11 +183,13 @@ namespace ViewModel
             (!string.IsNullOrWhiteSpace(Name) ||
              !string.IsNullOrWhiteSpace(PhoneNumber) ||
              !string.IsNullOrWhiteSpace(Email));
+
         #endregion
 
         #region Validation
+
         public bool HasErrors => _errors.Any();
-        public event EventHandler<DataErrorsChangedEventArgs> ErrorsChanged;
+        public event System.EventHandler<DataErrorsChangedEventArgs> ErrorsChanged;
 
         public System.Collections.IEnumerable GetErrors(string propertyName)
         {
@@ -205,7 +202,7 @@ namespace ViewModel
         private void AddError(string prop, string msg)
         {
             if (!_errors.ContainsKey(prop))
-                _errors[prop] = new List<string>();
+                _errors[prop] = new System.Collections.Generic.List<string>();
 
             if (!_errors[prop].Contains(msg))
             {
@@ -244,6 +241,37 @@ namespace ViewModel
             if (!string.IsNullOrEmpty(Email) && !Email.Contains("@"))
                 AddError(nameof(Email), "Неверный формат email.");
         }
+
+        #endregion
+
+        #region Serialization
+
+        private void SaveContacts()
+        {
+            _serializer.Save(Contacts.Select(c => new Contact
+            {
+                Name = c.Name,
+                PhoneNumber = c.PhoneNumber,
+                Email = c.Email
+            }).ToList());
+        }
+
+        private void LoadContacts()
+        {
+            var loaded = _serializer.Load();
+            Contacts.Clear();
+
+            foreach (var c in loaded)
+            {
+                Contacts.Add(new ContactVM
+                {
+                    Name = c.Name,
+                    PhoneNumber = c.PhoneNumber,
+                    Email = c.Email
+                });
+            }
+        }
+
         #endregion
     }
 }
