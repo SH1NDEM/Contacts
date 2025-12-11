@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using Model;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
-using View.Model;
 
-namespace View.Services
+namespace Model.Services
 {
     public class ContactSerializer
     {

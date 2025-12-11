@@ -10,15 +10,23 @@
 
   <ItemGroup>
     <None Remove="ContactIcon.jpg" />
+    <None Remove="Controls\Peson.jpg" />
     <None Remove="Peson.jpg" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Model\Model.csproj" />
+    <ProjectReference Include="..\ViewModel\ViewModel.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Resource Include="ContactIcon.jpg" />
+    <Resource Include="Controls\Peson.jpg" />
     <Resource Include="Peson.jpg" />
   </ItemGroup>
 
