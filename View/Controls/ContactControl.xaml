@@ -45,7 +45,7 @@
             Grid.Column="0"
             Margin="10,42,10,0"
             Width="100" Height="100"
-            Source="/Person.jpg"
+            Source="/Controls/Peson.jpg"
             VerticalAlignment="Top"/>
 
         <!-- Поля -->

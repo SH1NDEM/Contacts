@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <None Remove="ContactIcon.jpg" />
+    <None Remove="Controls\Peson.jpg" />
     <None Remove="Peson.jpg" />
   </ItemGroup>
 
@@ -19,7 +20,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Model\Model.csproj" />
+    <ProjectReference Include="..\ViewModel\ViewModel.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Resource Include="ContactIcon.jpg" />
+    <Resource Include="Controls\Peson.jpg" />
     <Resource Include="Peson.jpg" />
   </ItemGroup>
 

@@ -3,8 +3,8 @@ using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
-using View.Model;
-using View.Services;
+using Model;
+using Model.Services;
 
 namespace ViewModel
 {
